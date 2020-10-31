@@ -1,0 +1,106 @@
+---
+title: "Assignment8"
+author: "KUN LIU"
+date: "2020/10/31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+Consider the Ornstein-Uhlenbeck process
+$$dr(t) = \alpha(b-r(t))dt + \sigma dW(t), $$
+In Vasicek model, 
+$$r(t_{i+1}) = e^{H(t_{i+1})-H(t_{i})}r(t_{i})+\mu(t_{i},t_{i+1})+\sigma_{r}(t_{i},t_{i+1})Z_{i+1},$$
+where $t_{i+1} = t_{i}+\triangle$,
+$H(t_{i+1})-H(t_{i}) = -\alpha\triangle$,
+$\mu(t_{i},t_{i+1}) = b\alpha\int_{t_{i}}^{t_{i+1}}e^{-\alpha (t_{i+1}-s)}ds = b(1-e^{-\alpha\triangle}),$
+$\sigma_{r}(t_{i},t_{i+1}) = \frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha\triangle}},$
+$Z_{i+1} \sim N(0,1).$
+
+
+Let t denotes t$_{i}$, t+$\triangle$ denotes t$_{i+1}$. Then
+$$r(t+\triangle) = e^{-\alpha\triangle}r(t)+b(1-e^{-\alpha\triangle})+ \frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha\triangle}}Z,$$ 
+where Z$\sim$ N(0,1).
+
+# 2
+
+```{r}
+r0 = 1
+T = 500
+step = 1/500
+
+ou_process = function(alpha,sigma,b,r0,T,step)
+{ r = c(r0)
+  times = T/step
+ for(i in (1:times))
+ {last_r = r[i]
+  q1 = exp(-alpha*step)*last_r
+  q2 = b*(1-exp(-alpha*step))
+  q3 = sigma/(2*alpha)^0.5 * (1-exp(-2*alpha*step))^0.5
+  z = rnorm(1)
+  r[i+1] = q1+q2+q3*z
+ }
+plot(x=seq(0,T,by=step),y=r,main = '',xlab = 'time',ylab = 'sample')
+}
+
+```
+
+I construct the 18 sample paths in one figure.
+```{r}
+par(mfrow=c(3,6))
+for (alpha in c(0.1,1,5))
+{for (sigma in c(0.1,0.2,0.5))
+  {for (b in c(-5,5))
+    {ou_process(alpha,sigma,b,r0=1,T=500,step=1/500)
+      
+    }
+    
+  }
+}
+```
+
+From the 18 sample paths, I find that when $\alpha$ increases, the path tends to be steady; while when $\sigma$ increases, the path tends to be fluctuant.
+
+# 3
+Consider $\alpha=1$,$\sigma=0.5$,b=5,r$_{0}$ = 1.
+```{r}
+em = function(size,delta,alpha,sigma,b,r0)
+{r1 = c()
+ times = 1/delta
+ for (i in (1:1000))
+   {last_r = r0
+  for (j in (1:times))
+ {mean = last_r+alpha*(b-last_r)*delta
+  sd = delta*sigma 
+  last_r = rnorm(n=1,mean=mean,sd=sd)
+ }
+   r1[i] = last_r
+ }
+   plot(density(r1),xlab = '',ylab = '',main = 'kernel density')
+  
+}
+```
+
+When $\delta$ =1, the kernel density is 
+```{r}
+em(size=1000,delta=1,alpha=1,sigma=0.5,b=5,r0=1)
+```
+When $\delta$ =0.5, the kernel density is 
+```{r}
+em(size=1000,delta=0.5,alpha=1,sigma=0.5,b=5,r0=1)
+```
+When $\delta$ =0.1, the kernel density is 
+```{r}
+em(size=1000,delta=0.1,alpha=1,sigma=0.5,b=5,r0=1)
+```
+When $\delta$ =0.01, the kernel density is 
+```{r}
+em(size=1000,delta=0.01,alpha=1,sigma=0.5,b=5,r0=1)
+```
+
+
+
+
