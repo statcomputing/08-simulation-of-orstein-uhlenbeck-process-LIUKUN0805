@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # 1
+
+## 1.1
+
 Consider the Ornstein-Uhlenbeck process
 $$dr(t) = \alpha(b-r(t))dt + \sigma dW(t), $$
 In Vasicek model, 
@@ -25,7 +28,7 @@ Let t denotes t$_{i}$, t+$\triangle$ denotes t$_{i+1}$. Then
 $$r(t+\triangle) = e^{-\alpha\triangle}r(t)+b(1-e^{-\alpha\triangle})+ \frac{\sigma}{\sqrt{2\alpha}}\sqrt{1-e^{-2\alpha\triangle}}Z,$$ 
 where Z$\sim$ N(0,1).
 
-# 2
+## 1.2
 
 ```{r}
 r0 = 1
@@ -64,7 +67,7 @@ for (alpha in c(0.1,1,5))
 
 From the 18 sample paths, I find that when $\alpha$ increases, the path tends to be steady; while when $\sigma$ increases, the path tends to be fluctuant.
 
-# 3
+## 1.3
 Consider $\alpha=1$,$\sigma=0.5$,b=5,r$_{0}$ = 1.
 ```{r}
 em = function(size,delta,alpha,sigma,b,r0)
@@ -101,6 +104,64 @@ When $\delta$ =0.01, the kernel density is
 em(size=1000,delta=0.01,alpha=1,sigma=0.5,b=5,r0=1)
 ```
 
+# 2
+
+## 2.1
+```{r}
+f = function(x) {x^0.5+exp(-x)*sin(2*pi*x)}
+integrate(f,0,5)
+```
+
+Since it is a Poisson process, N(5) $\sim$ Poisson(Z), where 
+$$Z =\int_{0}^{5} \sqrt{t}+e^{-t}sin(2\pi t)dt = 7.607738. $$
+Therefore N(5) $\sim$ Poisson(7.6).
+
+## 2.2
+Next, I will sample arrival times in [0,5].
+
+Since $\lambda(t) < 15*u(t) = 3$, where u(t)$\sim$ Unif(0,5) and t $\in$ [0,5]. So 
 
 
+```{r}
+Z = integrate(f,0,5)$value
+poisson_process = function(times)
+{ all = c()
+  for (i in (1:times))
+{N = rpois(1,Z)
+ x = c()
+ while( length(x)<N)
+ {X = runif(1,min=0,max=5)
+  U = runif(1)
+  temp = f(X)/(3)
+  if(U<=temp)
+  {x = c(x,X)}
+ }
+all = c(all,x) 
+  }
+all = sort(all)
+return(all)
+}
+
+```
+
+
+## 2.3
+
+Firstly, get the pdf of Poisson process.
+```{r}
+f = function(x) x^0.5+exp(-x)*sin(2*pi*x)
+Z = integrate(f,0,5)$value
+f_pdf = function(x) f(x)/Z
+```
+
+```{r}
+sample = poisson_process(1000)
+plot(density(sample),xlab = '',ylab = '',main = '',col = 'red')
+par(new=TRUE)
+x= seq(0,5,by=0.001)
+y = f_pdf(x)
+plot(x,y,type = 'l',col = 'blue',xlab = '',ylab = '',axes = FALSE)
+```
+
+The blue plot is the true density and the red plot is the kernel density of the sample.
 
